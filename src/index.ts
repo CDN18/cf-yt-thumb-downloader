@@ -27,6 +27,24 @@ export interface Env {
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
+		const { pathname } = new URL(request.url);
+		if (pathname === "/") {
+			return new Response("Usage: /<YOUTUBE_VIDEO_ID>");
+		}
+
+		const videoId = pathname.slice(1);
+		const url = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+		const response = await fetch(url);
+
+		if (!response.ok) {
+			return new Response("Failed to fetch the thumbnail", { status: response.status });
+		}
+
+		const headers = new Headers({
+			"Content-Type": "image/jpeg",
+			"Cache-Control": "public, max-age=31536000, immutable",
+		});
+
+		return new Response(response.body, { headers });
 	},
 };
